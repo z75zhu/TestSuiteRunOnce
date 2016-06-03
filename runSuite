@@ -1,0 +1,53 @@
+#!/bin/bash
+suite="$1"
+program="$2"
+
+if [ ${#} -ne 2 ]; then
+	echo "Incorrect number of arguments"
+	exit 1
+fi
+
+while read -r test
+do
+
+if [ ! -e ${test}.in ]; then
+    echo "${test}.in does not exist"
+    exit 1
+fi
+
+if [ ! -e ${test}.out ]; then
+    echo "${test}.out does not exist"
+    exit 1
+fi
+
+if [ ! -r ${test}.in ]; then
+    echo "${test}.in is not readable"
+    exit 1
+fi
+
+if [ ! -r ${test}.out ]; then
+    echo "${test}.out is not readable"
+    exit 1
+fi
+done < "$suite"
+
+
+while read -r test
+do
+ 
+ expected=$(cat ${test}.out)
+if [ ! -e ${test}.args ]; then
+  actual=$(${program}  < ${test}.in)
+else
+  args=$(cat ${test}.args)
+  actual=$(${program} ${args} < ${test}.in)
+fi
+  #echo "${actual}" | diff ${line}.out - >/dev/null 
+  diff <(echo "${actual}") <(echo "${expected}") >/dev/null
+  if [ $? -ne 0 ] ; then
+	echo -e "Test failed: ${test}"
+	echo -e "Input:\n$(cat ${test}.in)"
+	echo -e "Expected:\n${expected}"
+	echo -e "Actual:\n${actual}"
+  fi
+done < "$suite"
